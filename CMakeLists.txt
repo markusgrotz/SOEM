@@ -68,3 +68,35 @@ install(FILES ${SOEM_HEADERS} ${OSAL_HEADERS} ${OSHW_HEADERS} DESTINATION ${SOEM
 add_subdirectory(test/linux/slaveinfo)
 add_subdirectory(test/linux/eepromtool)
 add_subdirectory(test/linux/simple_test)
+
+
+
+find_package(Git QUIET)
+if(GIT_FOUND)
+    # output format <tag>-<commit-id>-dirty or <tag>-<commit-id> or <commit-id>
+    execute_process(COMMAND ${GIT_EXECUTABLE} describe --long --tags --dirty --always
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE  GIT_EXIT_STATUS
+        OUTPUT_VARIABLE SOEM_PACKAGE_GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT GIT_EXIT_STATUS EQUAL 0)
+        message(WARNING "no git repository or unable to run git describe")
+        set(SIMOX_PACKAGE_GIT_VERSION "Unknown")
+    else()
+        message(STATUS "SOEM git version: ${SOEM_PACKAGE_GIT_VERSION}")
+    endif()
+endif()
+
+string(REGEX REPLACE "^v" "" SOEM_PACKAGE_GIT_VERSION ${SOEM_PACKAGE_GIT_VERSION})
+string(REGEX REPLACE "-.*$" "" SOEM_PACKAGE_GIT_VERSION ${SOEM_PACKAGE_GIT_VERSION})
+string(REPLACE "." ";" SOEM_PACKAGE_GIT_VERSION_LIST ${SOEM_PACKAGE_GIT_VERSION})
+list(GET SOEM_PACKAGE_GIT_VERSION_LIST 0 CPACK_PACKAGE_VERSION_MAJOR)
+list(GET SOEM_PACKAGE_GIT_VERSION_LIST 1 CPACK_PACKAGE_VERSION_MINOR)
+list(GET SOEM_PACKAGE_GIT_VERSION_LIST 2 CPACK_PACKAGE_VERSION_PATCH)
+
+message(STATUS "package version is ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_CONTACT "Open EtherCAT Society")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+include(CPack)
