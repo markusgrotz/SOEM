@@ -105,6 +105,7 @@ int ec_srconfirm(int idx,int timeout);
 
 void ec_setupheader(void *p);
 int ecx_setupnic(ecx_portt *port, const char * ifname, int secondary);
+int ecx_setupnic_wsock(ecx_portt *port, int psock, int secondary);
 int ecx_closenic(ecx_portt *port);
 void ecx_setbufstat(ecx_portt *port, int idx, int bufstat);
 int ecx_getindex(ecx_portt *port);

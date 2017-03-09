@@ -290,6 +290,16 @@ int ecx_init(ecx_contextt *context, const char * ifname)
    return ecx_setupnic(context->port, ifname, FALSE);
 }
 
+/** Initialise lib in single NIC mode
+ * @param[in]  context = context struct
+ * @param[in] psock    = Bound packet socket
+ * @return >0 if OK
+ */
+int ecx_init_wsock(ecx_contextt *context, int psock)
+{
+   return ecx_setupnic_wsock(context->port, psock, FALSE);
+}
+
 /** Initialise lib in redundant NIC mode
  * @param[in]  context  = context struct
  * @param[in]  redport  = pointer to redport, redundant port data
@@ -1937,6 +1947,16 @@ void ec_packeterror(uint16 Slave, uint16 Index, uint8 SubIdx, uint16 ErrorCode)
 int ec_init(const char * ifname)
 {
    return ecx_init(&ecx_context, ifname);
+}
+
+/** Initialize lib in single NIC mode
+ * @param[in] psock = Opened and bound packet socket
+ * @return >0 if OK
+ * @see ecx_init
+ */
+int ec_init_wsock(int psock)
+{
+  return ecx_init_wsock(&ecx_context, psock);
 }
 
 /** Initialise lib in redundant NIC mode

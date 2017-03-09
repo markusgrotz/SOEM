@@ -176,6 +176,69 @@ int ecx_setupnic(ecx_portt *port, const char *ifname, int secondary)
    return rval;
 }
 
+/** Basic setup to connect NIC to socket.
+ * @param[in] port        = port context struct
+ * @param[in] psock       = Bound packet socket
+ * @param[in] secondary   = if >0 then use secondary stack instead of primary
+ * @return >0 if succeeded
+ */
+int ecx_setupnic_wsock(ecx_portt *port, int psock, int secondary)
+{
+   int i;
+
+   if (secondary)
+   {
+      /* secondary port struct available? */
+      if (port->redport)
+      {
+         /* when using secondary socket it is automatically a redundant setup */
+         port->redport->sockhandle = psock;
+         port->redstate                   = ECT_RED_DOUBLE;
+         port->redport->stack.sock        = &(port->redport->sockhandle);
+         port->redport->stack.txbuf       = &(port->txbuf);
+         port->redport->stack.txbuflength = &(port->txbuflength);
+         port->redport->stack.tempbuf     = &(port->redport->tempinbuf);
+         port->redport->stack.rxbuf       = &(port->redport->rxbuf);
+         port->redport->stack.rxbufstat   = &(port->redport->rxbufstat);
+         port->redport->stack.rxsa        = &(port->redport->rxsa);
+         ecx_clear_rxbufstat(&(port->redport->rxbufstat[0]));
+      }
+      else
+      {
+         /* fail */
+         return 0;
+      }
+   }
+   else
+   {
+      pthread_mutex_init(&(port->getindex_mutex), NULL);
+      pthread_mutex_init(&(port->tx_mutex)      , NULL);
+      pthread_mutex_init(&(port->rx_mutex)      , NULL);
+      port->sockhandle        = -1;
+      port->lastidx           = 0;
+      port->redstate          = ECT_RED_NONE;
+      port->stack.sock        = &(port->sockhandle);
+      port->stack.txbuf       = &(port->txbuf);
+      port->stack.txbuflength = &(port->txbuflength);
+      port->stack.tempbuf     = &(port->tempinbuf);
+      port->stack.rxbuf       = &(port->rxbuf);
+      port->stack.rxbufstat   = &(port->rxbufstat);
+      port->stack.rxsa        = &(port->rxsa);
+      ecx_clear_rxbufstat(&(port->rxbufstat[0]));
+      port->sockhandle = psock;
+   }
+
+   /* setup ethernet headers in tx buffers so we don't have to repeat it */
+   for (i = 0; i < EC_MAXBUF; i++)
+   {
+      ec_setupheader(&(port->txbuf[i]));
+      port->rxbufstat[i] = EC_BUF_EMPTY;
+   }
+   ec_setupheader(&(port->txbuf2));
+
+   return 1;
+}
+
 /** Close sockets used
  * @param[in] port        = port context struct
  * @return 0
