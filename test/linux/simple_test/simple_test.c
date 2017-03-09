@@ -9,6 +9,8 @@
  * (c)Arthur Ketels 2010 - 2011
  */
 
+#define _POSIX_C_SOURCE 200112L
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
@@ -25,7 +27,7 @@ volatile int wkc;
 boolean inOP;
 uint8 currentgroup = 0;
 
-void simpletest(char *ifname)
+void simpletest(int psock)
 {
     int i, j, oloop, iloop, chk;
     needlf = FALSE;
@@ -34,9 +36,9 @@ void simpletest(char *ifname)
    printf("Starting simple test\n");
 
    /* initialise SOEM, bind socket to ifname */
-   if (ec_init(ifname))
+   if (ec_init_wsock(psock))
    {
-      printf("ec_init on %s succeeded.\n",ifname);
+      puts("ec_init on socket succeeded.");
       /* find and auto-config slaves */
 
 
@@ -139,7 +141,7 @@ void simpletest(char *ifname)
     }
     else
     {
-        printf("No socket connection on %s\nExcecute as root\n",ifname);
+        puts("No socket connection on, socket was not passed correctly.");
     }
 }
 
@@ -221,6 +223,7 @@ OSAL_THREAD_FUNC ecatcheck( void *ptr )
 
 int main(int argc, char *argv[])
 {
+   int psock;
    printf("SOEM (Simple Open EtherCAT Master)\nSimple test\n");
 
    if (argc > 1)
@@ -229,7 +232,8 @@ int main(int argc, char *argv[])
 //      pthread_create( &thread1, NULL, (void *) &ecatcheck, (void*) &ctime);
       osal_thread_create(&thread1, 128000, &ecatcheck, (void*) &ctime);
       /* start cyclic part */
-      simpletest(argv[1]);
+      psock = strtoul(argv[1], NULL, 10);
+      simpletest(psock);
    }
    else
    {
