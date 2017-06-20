@@ -55,6 +55,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "rt-kernel")
   file(GLOB OSHW_ARCHSOURCES oshw/${OS}/${ARCH}/*.c)
 endif()
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_library(soem STATIC ${SOEM_SOURCES} ${OSAL_SOURCES} ${OSHW_SOURCES} ${OSHW_ARCHSOURCES})
 if(WIN32)
   target_link_libraries(soem wpcap.lib Packet.lib Ws2_32.lib Winmm.lib ${HDF5_LIBRARIES})
